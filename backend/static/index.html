@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebToys - Interactive Canvas Experiments</title>
+    <link rel="stylesheet" href="/styles.css">
+    <meta name="description" content="Create and share interactive canvas experiments with WebToys">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>WebToys</h1>
+            <p class="tagline">Create interactive canvas experiments with AI</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Create Section -->
+        <section id="create-section" class="card">
+            <h2>Create a WebToy</h2>
+            <p>Describe what you want to create, and AI will generate the code for you.</p>
+            
+            <div class="input-group">
+                <label for="description-input">Describe your WebToy:</label>
+                <textarea 
+                    id="description-input" 
+                    placeholder="e.g., A bouncing ball that changes color when clicked and leaves a trail as it moves"
+                    rows="4"
+                ></textarea>
+            </div>
+            
+            <div class="button-group">
+                <button id="generate-button" class="primary-button" disabled>Generate WebToy</button>
+            </div>
+            
+            <div id="loading-indicator" class="loading">
+                <div class="spinner"></div>
+                <p>Creating your WebToy...</p>
+            </div>
+            
+            <div id="error-display" class="error-message"></div>
+            
+            <div class="examples">
+                <h3>Example prompts:</h3>
+                <ul>
+                    <li>A particle system that responds to mouse movement</li>
+                    <li>A digital clock with a unique visual style</li>
+                    <li>An interactive fractal tree that grows based on mouse position</li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- Preview Section -->
+        <section id="preview-section" class="card">
+            <h2>Your WebToy Preview</h2>
+            
+            <div class="iframe-container">
+                <iframe id="preview-frame" sandbox="allow-scripts" class="webtoy-preview"></iframe>
+            </div>
+            
+            <div class="button-group">
+                <button id="regenerate-button" class="secondary-button">Try Again</button>
+                <button id="publish-button" class="primary-button">Publish & Share</button>
+            </div>
+        </section>
+        
+        <!-- Share Section -->
+        <section id="share-section" class="card">
+            <h2>WebToy Published!</h2>
+            <p>Your WebToy is now live and ready to share:</p>
+            
+            <div class="share-link-container">
+                <a id="share-link" class="share-link" href="#" target="_blank"></a>
+                <button id="copy-link-button" class="icon-button">
+                    <span class="icon">📋</span>
+                </button>
+                <span id="copy-success" class="success-message">Copied!</span>
+            </div>
+            
+            <div class="button-group">
+                <a id="view-webtoy-button" class="primary-button" href="#" target="_blank">View WebToy</a>
+                <a href="/" class="secondary-button">Create Another</a>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 WebToys - Create and share interactive canvas experiments</p>
+        </div>
+    </footer>
+    
+    <script src="/sandbox.js"></script>
+    <script src="/app.js"></script>
+</body>
+</html>
