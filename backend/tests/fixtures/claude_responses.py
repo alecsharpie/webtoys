@@ -60,7 +60,6 @@ This creates an interactive particle system with colorful particles that bounce 
         "type": "message"
     }
 
-
 def invalid_syntax_response() -> Dict[str, Any]:
     """
     A mock Claude API response with invalid JSON syntax
@@ -99,7 +98,6 @@ This creates a simple blue square animation."""
         "role": "assistant",
         "type": "message"
     }
-
 
 def malformed_response() -> Dict[str, Any]:
     """

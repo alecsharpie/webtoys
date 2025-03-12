@@ -5,31 +5,26 @@ Main FastAPI application for the WebToys platform.
 This handles code generation, validation, storage, and serving of WebToys.
 """
 
+import logging
 import os
 import time
 import uuid
-import logging
-import json
-from typing import Dict, Optional, List, Any
-from pathlib import Path
-from dotenv import load_dotenv
+from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request, Depends, Response
-from fastapi.responses import HTMLResponse, JSONResponse
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from config import settings
+from services.ai_service import AIService
+from services.storage import StorageService
+from services.validator import WebToyValidator
+
 # Load environment variables
 load_dotenv()
-
-# Import services
-from services.ai_service import AIService
-from services.validator import WebToyValidator
-from services.storage import StorageService
-
-# Import settings
-from config import settings
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -37,9 +32,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="WebToys API",
-    description="Backend API for WebToys platform",
-    version="1.0.0"
+    title="WebToys API", description="Backend API for WebToys platform", version="1.0.0"
 )
 
 # Update CORS middleware
@@ -52,49 +45,50 @@ app.add_middleware(
 )
 
 # Initialize services
-ai_service = AIService(
-    api_key=settings.claude_api_key,
-    model=settings.claude_model
-)
+ai_service = AIService(api_key=settings.claude_api_key, model=settings.claude_model)
 
 validator = WebToyValidator()
 
 storage = StorageService(
-    storage_type=settings.storage_type,
-    connection_string=settings.storage_connection
+    storage_type=settings.storage_type, connection_string=settings.storage_connection
 )
 
 # Rate limiting configuration (simple in-memory implementation)
 rate_limits = {}
 
+
 # Request models
 class GenerateRequest(BaseModel):
     description: str = Field(..., min_length=10, max_length=1000)
-    parameters: Optional[Dict[str, Any]] = None
+    parameters: dict[str, Any] | None = None
+
 
 class PublishRequest(BaseModel):
     preview_id: str
 
+
 # Response models
 class GenerateResponse(BaseModel):
     preview_id: str
-    code: Dict[str, str]
+    code: dict[str, str]
+
 
 class PublishResponse(BaseModel):
     id: str
     url: str
+
 
 # Helper functions
 async def check_rate_limit(request: Request):
     """Simple rate limiting for API requests"""
     client_ip = request.client.host
     current_time = time.time()
-    
+
     # Clean up old entries
     for ip in list(rate_limits.keys()):
         if current_time - rate_limits[ip]["timestamp"] > 3600:  # 1 hour window
             del rate_limits[ip]
-    
+
     # Check client limit
     if client_ip in rate_limits:
         entry = rate_limits[client_ip]
@@ -108,16 +102,13 @@ async def check_rate_limit(request: Request):
             entry["count"] = 1
     else:
         # Create new entry
-        rate_limits[client_ip] = {
-            "timestamp": current_time,
-            "count": 1
-        }
+        rate_limits[client_ip] = {"timestamp": current_time, "count": 1}
+
 
 # API routes
 @app.post("/api/generate", response_model=GenerateResponse)
 async def generate_webtoy(
-    request: GenerateRequest,
-    _: None = Depends(check_rate_limit)
+    request: GenerateRequest, _: None = Depends(check_rate_limit)
 ):
     """
     Generate WebToy code from a text description
@@ -125,61 +116,54 @@ async def generate_webtoy(
     try:
         # Generate code using AI
         code = await ai_service.generate_code(
-            description=request.description,
-            parameters=request.parameters
+            description=request.description, parameters=request.parameters
         )
-        
+
         # Validate and sanitize code
         validation_result = validator.validate(code)
-        
+
         if not validation_result.is_valid:
             return JSONResponse(
                 status_code=400,
                 content={
                     "detail": "Generated code failed security validation",
-                    "issues": validation_result.issues
-                }
+                    "issues": validation_result.issues,
+                },
             )
-        
+
         # Store sanitized code for preview
         preview_id = str(uuid.uuid4())
         await storage.store_preview(
             preview_id=preview_id,
             code=validation_result.sanitized_code,
-            metadata={
-                "description": request.description,
-                "timestamp": time.time()
-            }
+            metadata={"description": request.description, "timestamp": time.time()},
         )
-        
+
         # Return preview information
         return GenerateResponse(
-            preview_id=preview_id,
-            code=validation_result.sanitized_code
+            preview_id=preview_id, code=validation_result.sanitized_code
         )
-    
+
     except Exception as e:
-        logger.error(f"Error generating WebToy: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate WebToy: {str(e)}")
+        logger.error(f"Error generating WebToy: {e!s}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate WebToy: {e!s}")
+
 
 @app.post("/api/publish", response_model=PublishResponse)
-async def publish_webtoy(
-    request: PublishRequest,
-    _: None = Depends(check_rate_limit)
-):
+async def publish_webtoy(request: PublishRequest, _: None = Depends(check_rate_limit)):
     """
     Publish a previously generated WebToy
     """
     try:
         # Retrieve preview code
         preview = await storage.get_preview(request.preview_id)
-        
+
         if not preview:
             raise HTTPException(status_code=404, detail="Preview not found")
-        
+
         # Generate permanent ID
         webtoy_id = str(uuid.uuid4())[:8]  # Shorter ID for sharing
-        
+
         # Store as published WebToy
         await storage.publish_webtoy(
             webtoy_id=webtoy_id,
@@ -187,24 +171,22 @@ async def publish_webtoy(
             metadata={
                 "description": preview["metadata"].get("description", ""),
                 "created_at": time.time(),
-                "preview_id": request.preview_id
-            }
+                "preview_id": request.preview_id,
+            },
         )
-        
+
         # Return published information
         base_url = os.environ.get("BASE_URL", "http://localhost:8000")
         webtoy_url = f"{base_url}/toy/{webtoy_id}"
-        
-        return PublishResponse(
-            id=webtoy_id,
-            url=webtoy_url
-        )
-    
+
+        return PublishResponse(id=webtoy_id, url=webtoy_url)
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error publishing WebToy: {str(e)}")
+        logger.error(f"Error publishing WebToy: {e!s}")
         raise HTTPException(status_code=500, detail="Failed to publish WebToy")
+
 
 @app.get("/preview/{preview_id}", response_class=HTMLResponse)
 async def get_preview(preview_id: str):
@@ -214,25 +196,26 @@ async def get_preview(preview_id: str):
     try:
         # Retrieve preview
         preview = await storage.get_preview(preview_id)
-        
+
         if not preview:
             raise HTTPException(status_code=404, detail="Preview not found")
-        
+
         # Render preview HTML
         return render_webtoy(
             preview["code"],
             {
                 "title": "WebToy Preview",
                 "is_preview": True,
-                "description": preview["metadata"].get("description", "")
-            }
+                "description": preview["metadata"].get("description", ""),
+            },
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error serving preview: {str(e)}")
+        logger.error(f"Error serving preview: {e!s}")
         raise HTTPException(status_code=500, detail="Failed to serve preview")
+
 
 @app.get("/toy/{webtoy_id}", response_class=HTMLResponse)
 async def get_webtoy(webtoy_id: str):
@@ -242,10 +225,10 @@ async def get_webtoy(webtoy_id: str):
     try:
         # Retrieve WebToy
         webtoy = await storage.get_webtoy(webtoy_id)
-        
+
         if not webtoy:
             raise HTTPException(status_code=404, detail="WebToy not found")
-        
+
         # Render WebToy HTML
         return render_webtoy(
             webtoy["code"],
@@ -253,17 +236,18 @@ async def get_webtoy(webtoy_id: str):
                 "title": f"WebToy: {webtoy_id}",
                 "is_preview": False,
                 "description": webtoy["metadata"].get("description", ""),
-                "webtoy_id": webtoy_id
-            }
+                "webtoy_id": webtoy_id,
+            },
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error serving WebToy: {str(e)}")
+        logger.error(f"Error serving WebToy: {e!s}")
         raise HTTPException(status_code=500, detail="Failed to serve WebToy")
 
-def render_webtoy(code: Dict[str, str], options: Dict[str, Any]) -> str:
+
+def render_webtoy(code: dict[str, str], options: dict[str, Any]) -> str:
     """
     Render HTML for a WebToy with proper sandboxing
     """
@@ -271,11 +255,13 @@ def render_webtoy(code: Dict[str, str], options: Dict[str, Any]) -> str:
     html = code.get("html", "")
     css = code.get("css", "")
     js = code.get("js", "")
-    
+
     # Sanitize title and description
     title = options.get("title", "WebToy").replace("<", "&lt;").replace(">", "&gt;")
-    description = options.get("description", "").replace("<", "&lt;").replace(">", "&gt;")
-    
+    description = (
+        options.get("description", "").replace("<", "&lt;").replace(">", "&gt;")
+    )
+
     # Generate HTML
     return f"""
     <!DOCTYPE html>
@@ -431,8 +417,10 @@ def render_webtoy(code: Dict[str, str], options: Dict[str, Any]) -> str:
     </html>
     """
 
+
 # Serve static files (frontend)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
 
 # Health check endpoint
 @app.get("/health")
@@ -442,7 +430,9 @@ async def health_check():
     """
     return {"status": "healthy", "timestamp": time.time()}
 
+
 # Run application
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

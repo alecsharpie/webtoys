@@ -104,6 +104,12 @@ lint: ## Lint code with uv (ruff, mypy)
 	@. .venv/bin/activate && cd backend && uv run mypy .
 	@echo "${COLOR_GREEN}Linting complete!${COLOR_RESET}"
 
+# Fix linting errors automatically
+lint-fix: ## Fix linting errors automatically with ruff
+	@echo "${COLOR_BLUE}Fixing linting errors...${COLOR_RESET}"
+	@. .venv/bin/activate && cd backend && uv run ruff check --fix .
+	@echo "${COLOR_GREEN}Linting fixes applied!${COLOR_RESET}"
+
 # Format code using uv
 format: ## Format code with uv (ruff format)
 	@echo "${COLOR_BLUE}Formatting code...${COLOR_RESET}"

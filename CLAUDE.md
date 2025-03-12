@@ -64,11 +64,14 @@ make test-coverage
 ### Code Quality
 
 ```bash
-# Format code
+# Format code with Ruff
 make format
 
-# Lint code
+# Lint code with Ruff and mypy
 make lint
+
+# Fix auto-fixable linting errors
+make lint-fix
 
 # Run CI pipeline checks
 make ci
@@ -87,15 +90,18 @@ make deploy-prod
 ## Code Style Guidelines
 
 - **Python Version**: >=3.12
-- **Imports**: Standard library first, then third-party, then local modules (alphabetical)
+- **Linting & Formatting**: Ruff is used for both linting and formatting
+- **Imports**: Standard library first, then third-party, then local modules (alphabetical), automatically sorted by Ruff
 - **Variables**: Snake_case for variables, UPPERCASE for constants
 - **Functions**: Use type annotations for parameters and return types
-- **Error Handling**: Use appropriate try/except blocks with specific exceptions
+- **Error Handling**: Use appropriate try/except blocks with specific exceptions (never use bare `except:`)
 - **Documentation**: Docstrings for all functions/classes using triple quotes
 - **Security**: Be vigilant about sanitizing user inputs and setting proper CSP rules
 - **Frontend JS**: ES6 standard with clear variable names and JSDoc comments
 - **HTML/CSS**: Follow semantic HTML5 with class-based styling
 - **Tests**: Follow AAA pattern (Arrange, Act, Assert) and use descriptive names
+
+For full linting rules, see the Ruff configuration in `pyproject.toml`.
 
 ## Project Dependencies
 

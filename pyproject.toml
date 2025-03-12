@@ -30,8 +30,7 @@ dev = [
 ]
 lint = [
     "mypy>=1.5.1,<2",
-    "flake8>=6.1.0,<7",
-    "black>=23.10.1,<24",
+    "ruff>=0.5.0,<0.6",
 ]
 pre-commit = [
     "pre-commit>=3.5.0,<4",
@@ -67,18 +66,74 @@ exclude_lines = [
 ]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
+# Exclude test fixtures with intentionally invalid code
+exclude = [
+    "tests/fixtures/claude_responses.py$",
+]
 
-[tool.black]
+[tool.ruff]
 line-length = 88
-target-version = ['py39']
-include = '\.pyi?$'
+target-version = "py312"
+exclude = [
+    "**/__pycache__",
+    "**/venv",
+    "**/.venv",
+    "**/docs/conf.py",
+    "**/tests/fixtures/claude_responses.py",
+]
 
-[tool.flake8]
-max-line-length = 88
-extend-ignore = "E203"
-exclude = [".git", "__pycache__", "build", "dist"]
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "B",    # flake8-bugbear
+    "I",    # isort
+    "UP",   # pyupgrade
+    "N",    # pep8-naming
+    "RUF",  # ruff-specific rules
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "TID",  # flake8-tidy-imports
+]
+
+# Explicitly ignore certain rules.
+ignore = [
+    "B008",   # Allow function calls in default arguments for FastAPI dependencies
+    "B904",   # We use FastAPI exception handling style without 'from'
+    "E203",   # Conflicts with Black
+    "E501",   # Line length governed by formatter
+]
+
+# Allow unused variables when underscore-prefixed or in test fixtures.
+dummy-variable-rgx = "^(_|dummy|unused).*$"
+
+[tool.ruff.lint.isort]
+known-first-party = ["services", "config"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[tool.ruff.lint.per-file-ignores]
+# Allow wildcard imports in __init__ files
+"**/__init__.py" = ["F403"]
+# Ignore specific errors in test files
+"**/tests/**" = [
+    "E501",      # Long lines are sometimes needed in test data
+    "N802",      # Allow function names like test_API_errors in tests
+    "B018",      # Allow useless expressions in test assertions
+]
+# Exclude test fixtures with intentionally broken syntax for testing
+"**/tests/fixtures/claude_responses.py" = ["ALL"]
+"**/tests/fixtures/sample_webtoys.py" = ["F401", "UP035", "UP006"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
