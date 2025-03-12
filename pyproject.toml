@@ -76,6 +76,15 @@ exclude = [
     "tests/fixtures/claude_responses.py$",
 ]
 
+[[tool.mypy.overrides]]
+module = ["boto3", "boto3.*", "botocore", "botocore.*", "httpx"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
 [tool.ruff]
 line-length = 88
 target-version = "py312"

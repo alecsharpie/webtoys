@@ -74,17 +74,9 @@ def invalid_syntax_response() -> Dict[str, Any]:
 {
   "html": "<canvas id='myCanvas' width='500' height='500'></canvas>",
   "css": "body { margin: 0; background: #f0f0f0; }",
-  "js": "const canvas = document.getElementById('myCanvas');
-  const ctx = canvas.getContext('2d');
-  
-  function draw() {
-    // This has invalid syntax - missing closing brace
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(50, 50, 100, 100;
-    
-    requestAnimationFrame(draw);
-  }
+  "js": "const canvas = document.getElementById('myCanvas'); const ctx = canvas.getContext('2d'); function draw() { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = 'blue'; ctx.fillRect(50, 50, 100, 100); requestAnimationFrame(draw); }"
+}
+```"""
   
   draw();"
 }

@@ -29,3 +29,17 @@ lint = [
     "isort>=6.0.1",
     "mypy>=1.15.0",
 ]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+strict_optional = true
+exclude = [
+    "tests/.*",  # Exclude all test files
+]

@@ -43,7 +43,7 @@ class StorageService:
 
         logger.info(f"Storage service initialized with type: {storage_type}")
 
-    def _init_file_storage(self):
+    def _init_file_storage(self) -> None:
         """Initialize file system storage"""
         # Create storage directories
         self.base_dir = (
@@ -63,11 +63,11 @@ class StorageService:
         # Prevent task from being garbage collected
         self._cleanup_task = cleanup_task
 
-    def _init_s3_storage(self):
+    def _init_s3_storage(self) -> None:
         """Initialize S3 storage"""
         try:
-            import boto3
-            from botocore.exceptions import NoCredentialsError
+            import boto3  # type: ignore
+            from botocore.exceptions import NoCredentialsError  # type: ignore
 
             # Parse connection string for S3
             if self.connection_string:
@@ -104,7 +104,7 @@ class StorageService:
             logger.error(f"Failed to initialize S3 storage: {e!s}")
             raise RuntimeError(f"S3 storage initialization failed: {e!s}")
 
-    def _init_database_storage(self):
+    def _init_database_storage(self) -> None:
         """Initialize database storage"""
         try:
             import sqlite3
@@ -262,7 +262,7 @@ class StorageService:
     # File storage implementation
     async def _store_preview_file(
         self, preview_id: str, code: dict[str, str], metadata: dict[str, Any]
-    ):
+    ) -> None:
         """Store preview in file system"""
         preview_path = self.previews_dir / f"{preview_id}.json"
 
@@ -282,14 +282,15 @@ class StorageService:
 
         try:
             with open(preview_path) as f:
-                return json.load(f)
+                preview_data: dict[str, Any] = json.load(f)
+                return preview_data
         except json.JSONDecodeError:
             logger.error(f"Failed to parse preview JSON for ID: {preview_id}")
             return None
 
     async def _publish_webtoy_file(
         self, webtoy_id: str, code: dict[str, str], metadata: dict[str, Any]
-    ):
+    ) -> None:
         """Publish WebToy to file system"""
         webtoy_path = self.webtoys_dir / f"{webtoy_id}.json"
 
@@ -309,7 +310,8 @@ class StorageService:
 
         try:
             with open(webtoy_path) as f:
-                return json.load(f)
+                webtoy_data: dict[str, Any] = json.load(f)
+                return webtoy_data
         except json.JSONDecodeError:
             logger.error(f"Failed to parse WebToy JSON for ID: {webtoy_id}")
             return None
@@ -350,7 +352,7 @@ class StorageService:
 
         return webtoys
 
-    async def _cleanup_old_previews(self):
+    async def _cleanup_old_previews(self) -> None:
         """Cleanup old preview files periodically"""
         while True:
             try:
@@ -391,7 +393,7 @@ class StorageService:
     # S3 storage implementation (simplified)
     async def _store_preview_s3(
         self, preview_id: str, code: dict[str, str], metadata: dict[str, Any]
-    ):
+    ) -> None:
         """Store preview in S3"""
         preview_data = {"code": code, "metadata": metadata}
 
@@ -412,7 +414,8 @@ class StorageService:
 
             # Parse JSON
             preview_json = response["Body"].read().decode("utf-8")
-            return json.loads(preview_json)
+            preview_data: dict[str, Any] = json.loads(preview_json)
+            return preview_data
 
         except Exception as e:
             logger.error(f"Failed to get preview from S3: {e!s}")
@@ -420,7 +423,7 @@ class StorageService:
 
     async def _publish_webtoy_s3(
         self, webtoy_id: str, code: dict[str, str], metadata: dict[str, Any]
-    ):
+    ) -> None:
         """Publish WebToy to S3"""
         webtoy_data = {"code": code, "metadata": metadata}
 
@@ -441,7 +444,8 @@ class StorageService:
 
             # Parse JSON
             webtoy_json = response["Body"].read().decode("utf-8")
-            return json.loads(webtoy_json)
+            webtoy_data: dict[str, Any] = json.loads(webtoy_json)
+            return webtoy_data
 
         except Exception as e:
             logger.error(f"Failed to get WebToy from S3: {e!s}")
@@ -495,7 +499,7 @@ class StorageService:
     # Database storage implementation (simplified)
     async def _store_preview_db(
         self, preview_id: str, code: dict[str, str], metadata: dict[str, Any]
-    ):
+    ) -> None:
         """Store preview in database"""
         # Extract code components
         html = code.get("html", "")
@@ -531,7 +535,7 @@ class StorageService:
 
     async def _publish_webtoy_db(
         self, webtoy_id: str, code: dict[str, str], metadata: dict[str, Any]
-    ):
+    ) -> None:
         """Publish WebToy to database"""
         # Extract code components
         html = code.get("html", "")

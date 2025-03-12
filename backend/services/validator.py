@@ -8,7 +8,7 @@ It checks for malicious patterns, dangerous APIs, and ensures code meets securit
 import json
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ValidationResult:
     is_valid: bool
-    issues: list[str] = None
-    sanitized_code: dict[str, str] = None
+    issues: list[str] = field(default_factory=list)
+    sanitized_code: dict[str, str] = field(default_factory=dict)
 
 
 class WebToyValidator:
@@ -244,7 +244,8 @@ class WebToyValidator:
             try:
                 with open(config_path) as f:
                     config = json.load(f)
-                    return config.get("js_blocklist", {})
+                    js_blocklist: dict[str, str] = config.get("js_blocklist", {})
+                    return js_blocklist
             except (OSError, json.JSONDecodeError) as e:
                 logger.error(f"Failed to load config file: {e}")
 
@@ -270,7 +271,8 @@ class WebToyValidator:
             try:
                 with open(config_path) as f:
                     config = json.load(f)
-                    return config.get("html_blocklist", [])
+                    html_blocklist: list[str] = config.get("html_blocklist", [])
+                    return html_blocklist
             except (OSError, json.JSONDecodeError) as e:
                 logger.error(f"Failed to load config file: {e}")
 

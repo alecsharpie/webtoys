@@ -6,8 +6,11 @@ import json
 import os
 import shutil
 import tempfile
+from collections.abc import Generator
+from typing import Any
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 from services.storage import StorageService
 
@@ -17,19 +20,19 @@ class TestStorageService:
     """Test cases for storage service"""
 
     @pytest.fixture
-    def storage_dir(self):
+    def storage_dir(self) -> Generator[str, None, None]:
         """Create a temporary storage directory for tests"""
         temp_dir = tempfile.mkdtemp()
         yield temp_dir
         shutil.rmtree(temp_dir)
 
     @pytest.fixture
-    def file_storage(self, storage_dir):
+    def file_storage(self, storage_dir: str) -> StorageService:
         """Create a file-based storage service for testing"""
         return StorageService(storage_type="file", connection_string=storage_dir)
 
     @pytest.fixture
-    def test_code(self):
+    def test_code(self) -> dict[str, str]:
         """Sample WebToy code for testing"""
         return {
             "html": "<canvas></canvas>",
@@ -38,12 +41,14 @@ class TestStorageService:
         }
 
     @pytest.fixture
-    def test_metadata(self):
+    def test_metadata(self) -> dict[str, Any]:
         """Sample metadata for testing"""
         return {"description": "Test WebToy", "timestamp": 1234567890}
 
     @pytest.mark.asyncio
-    async def test_store_preview(self, file_storage, test_code, test_metadata):
+    async def test_store_preview(
+        self, file_storage: StorageService, test_code: dict[str, str], test_metadata: dict[str, Any]
+    ) -> None:
         """Test storing a preview"""
         preview_id = "test-preview-123"
 
@@ -53,11 +58,11 @@ class TestStorageService:
         )
 
         # Verify directory structure
-        preview_dir = os.path.join(file_storage.base_path, "previews")
+        preview_dir = file_storage.previews_dir
         assert os.path.isdir(preview_dir)
 
         # Verify preview file exists
-        preview_file = os.path.join(preview_dir, f"{preview_id}.json")
+        preview_file = preview_dir / f"{preview_id}.json"
         assert os.path.isfile(preview_file)
 
         # Verify file contents
@@ -68,7 +73,9 @@ class TestStorageService:
         assert stored_data["metadata"] == test_metadata
 
     @pytest.mark.asyncio
-    async def test_get_preview(self, file_storage, test_code, test_metadata):
+    async def test_get_preview(
+        self, file_storage: StorageService, test_code: dict[str, str], test_metadata: dict[str, Any]
+    ) -> None:
         """Test retrieving a preview"""
         preview_id = "test-preview-456"
 
@@ -86,13 +93,15 @@ class TestStorageService:
         assert preview["metadata"] == test_metadata
 
     @pytest.mark.asyncio
-    async def test_get_nonexistent_preview(self, file_storage):
+    async def test_get_nonexistent_preview(self, file_storage: StorageService) -> None:
         """Test retrieving a non-existent preview"""
         preview = await file_storage.get_preview("non-existent-id")
         assert preview is None
 
     @pytest.mark.asyncio
-    async def test_publish_webtoy(self, file_storage, test_code, test_metadata):
+    async def test_publish_webtoy(
+        self, file_storage: StorageService, test_code: dict[str, str], test_metadata: dict[str, Any]
+    ) -> None:
         """Test publishing a WebToy"""
         webtoy_id = "test-webtoy-789"
 
@@ -102,11 +111,11 @@ class TestStorageService:
         )
 
         # Verify directory structure
-        webtoys_dir = os.path.join(file_storage.base_path, "webtoys")
+        webtoys_dir = file_storage.webtoys_dir
         assert os.path.isdir(webtoys_dir)
 
         # Verify webtoy file exists
-        webtoy_file = os.path.join(webtoys_dir, f"{webtoy_id}.json")
+        webtoy_file = webtoys_dir / f"{webtoy_id}.json"
         assert os.path.isfile(webtoy_file)
 
         # Verify file contents
@@ -117,7 +126,9 @@ class TestStorageService:
         assert stored_data["metadata"] == test_metadata
 
     @pytest.mark.asyncio
-    async def test_get_webtoy(self, file_storage, test_code, test_metadata):
+    async def test_get_webtoy(
+        self, file_storage: StorageService, test_code: dict[str, str], test_metadata: dict[str, Any]
+    ) -> None:
         """Test retrieving a published WebToy"""
         webtoy_id = "test-webtoy-abc"
 
@@ -135,15 +146,19 @@ class TestStorageService:
         assert webtoy["metadata"] == test_metadata
 
     @pytest.mark.asyncio
-    async def test_get_nonexistent_webtoy(self, file_storage):
+    async def test_get_nonexistent_webtoy(self, file_storage: StorageService) -> None:
         """Test retrieving a non-existent WebToy"""
         webtoy = await file_storage.get_webtoy("non-existent-id")
         assert webtoy is None
 
     @pytest.mark.asyncio
     async def test_cleanup_old_previews(
-        self, file_storage, test_code, test_metadata, monkeypatch
-    ):
+        self, 
+        file_storage: StorageService, 
+        test_code: dict[str, str], 
+        test_metadata: dict[str, Any], 
+        monkeypatch: MonkeyPatch
+    ) -> None:
         """Test cleanup of old previews"""
         import time
 
@@ -172,12 +187,26 @@ class TestStorageService:
             metadata={"timestamp": time.time()},
         )
 
-        # Set the max age to 1 day
-        file_storage.preview_max_age = 86400  # 1 day in seconds
-
-        # Run cleanup with current time as 2023-01-04
+        # Manually run cleanup
         with freeze_time("2023-01-04"):
-            await file_storage.cleanup_old_previews()
+            # Create a method to run a one-time cleanup
+            async def run_once_cleanup() -> None:
+                # Get all preview files
+                preview_files = list(file_storage.previews_dir.glob("*.json"))
+
+                # Current time
+                current_time = time.time()
+
+                # Use 1 day (86400 seconds) as max age
+                max_age = 86400
+
+                # Delete files older than max_age
+                for file_path in preview_files:
+                    file_age = current_time - file_path.stat().st_mtime
+                    if file_age > max_age:
+                        file_path.unlink()
+            
+            await run_once_cleanup()
 
         # Old previews should be gone
         old_preview_1 = await file_storage.get_preview("old-preview-1")

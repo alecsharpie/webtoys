@@ -54,7 +54,7 @@ storage = StorageService(
 )
 
 # Rate limiting configuration (simple in-memory implementation)
-rate_limits = {}
+rate_limits: dict[str, dict[str, float]] = {}
 
 
 # Request models
@@ -79,9 +79,11 @@ class PublishResponse(BaseModel):
 
 
 # Helper functions
-async def check_rate_limit(request: Request):
+async def check_rate_limit(request: Request) -> None:
     """Simple rate limiting for API requests"""
-    client_ip = request.client.host
+    client_ip = "unknown"
+    if request.client and hasattr(request.client, "host"):
+        client_ip = request.client.host
     current_time = time.time()
 
     # Clean up old entries
@@ -109,7 +111,7 @@ async def check_rate_limit(request: Request):
 @app.post("/api/generate", response_model=GenerateResponse)
 async def generate_webtoy(
     request: GenerateRequest, _: None = Depends(check_rate_limit)
-):
+) -> JSONResponse | GenerateResponse:
     """
     Generate WebToy code from a text description
     """
@@ -150,7 +152,7 @@ async def generate_webtoy(
 
 
 @app.post("/api/publish", response_model=PublishResponse)
-async def publish_webtoy(request: PublishRequest, _: None = Depends(check_rate_limit)):
+async def publish_webtoy(request: PublishRequest, _: None = Depends(check_rate_limit)) -> PublishResponse:
     """
     Publish a previously generated WebToy
     """
@@ -189,7 +191,7 @@ async def publish_webtoy(request: PublishRequest, _: None = Depends(check_rate_l
 
 
 @app.get("/preview/{preview_id}", response_class=HTMLResponse)
-async def get_preview(preview_id: str):
+async def get_preview(preview_id: str) -> str:
     """
     Serve a WebToy preview
     """
@@ -218,7 +220,7 @@ async def get_preview(preview_id: str):
 
 
 @app.get("/toy/{webtoy_id}", response_class=HTMLResponse)
-async def get_webtoy(webtoy_id: str):
+async def get_webtoy(webtoy_id: str) -> str:
     """
     Serve a published WebToy
     """
@@ -424,7 +426,7 @@ app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 # Health check endpoint
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, Any]:
     """
     Health check endpoint for monitoring
     """

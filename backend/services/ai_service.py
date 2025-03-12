@@ -9,6 +9,10 @@ import logging
 import re
 from typing import Any
 
+from anthropic.types import (
+    TextBlock,
+)
+
 # Setup logging
 logger = logging.getLogger(__name__)
 
@@ -82,7 +86,13 @@ class AIService:
             )
 
             # Parse response
-            return self._parse_response(response.content[0].text)
+            content_block = response.content[0]
+            
+            # Handle different block types
+            if isinstance(content_block, TextBlock):
+                return self._parse_response(content_block.text)
+            else:
+                raise ValueError(f"Unexpected content block type: {type(content_block)}")
 
         except Exception as e:
             logger.error(f"Claude API error: {e!s}")
