@@ -1,0 +1,84 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "webtoys"
+version = "0.1.0"
+description = "Create and share interactive HTML5 Canvas experiments with AI"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = [
+    "fastapi>=0.104.1",
+    "uvicorn>=0.23.2",
+    "pydantic>=2.4.2",
+    "pydantic-settings>=2.0.3",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.25.1",
+    "jinja2>=3.1.2",
+    "python-multipart>=0.0.6",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.4.3,<8",
+    "pytest-asyncio>=0.21.1,<0.22",
+    "pytest-cov>=4.1.0,<5",
+    "httpx>=0.25.1,<0.26",
+    "asgi-lifespan>=2.1.0,<3",
+]
+lint = [
+    "mypy>=1.5.1,<2",
+    "flake8>=6.1.0,<7",
+    "black>=23.10.1,<24",
+]
+pre-commit = [
+    "pre-commit>=3.5.0,<4",
+]
+
+[tool.uv]
+default-groups = ["dev", "lint"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+asyncio_mode = "auto"
+markers = [
+    "unit: marks a test as a unit test",
+    "integration: marks a test as an integration test",
+    "slow: marks a test as slow",
+]
+
+[tool.coverage.run]
+source = ["backend"]
+omit = ["backend/tests/*", "*/__pycache__/*", "*/venv/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = "E203"
+exclude = [".git", "__pycache__", "build", "dist"]

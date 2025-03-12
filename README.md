@@ -19,8 +19,22 @@ WebToys is a platform that allows you to create interactive canvas-based web "to
 
 - [Docker](https://www.docker.com/get-started) and Docker Compose
 - [Anthropic API key](https://www.anthropic.com/) for Claude AI
+- [1Password CLI](https://1password.com/downloads/command-line/) (for dev setup)
 
-### Installation
+### Quick Start with Docker
+
+```bash
+# Set up your environment (requires 1Password CLI)
+make setup
+
+# Build and run the application
+make build
+make run
+
+# Application will be available at http://localhost:8000
+```
+
+### Development Setup
 
 1. **Clone the repository**
 
@@ -29,19 +43,21 @@ git clone https://github.com/yourusername/webtoys.git
 cd webtoys
 ```
 
-2. **Set up environment variables**
-
-Edit the `backend/.env` file:
-
-```
-CLAUDE_API_KEY=your_claude_api_key_here
-CLAUDE_MODEL=claude-3-opus-20240229
-```
-
-3. **Build and run with Docker Compose**
+2. **Set up environment and dependencies**
 
 ```bash
-docker-compose up -d
+# Set up API keys and environment variables
+make setup
+
+# Set up development environment
+make setup-dev
+source .venv/bin/activate
+```
+
+3. **Run the development server**
+
+```bash
+make run-dev
 ```
 
 4. **Access the application**
@@ -51,73 +67,65 @@ Open your browser and go to:
 http://localhost:8000
 ```
 
-## Local Development Setup (without Docker)
+## Development Workflow
 
-If you prefer to run without Docker:
-
-1. **Set up a Python environment**
+WebToys uses a Make-based workflow for consistent development experience:
 
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+# Run development server
+make run-dev
+
+# Format, lint, and test (fast development cycle)
+make dev-loop
+
+# Run tests
+make test
+make test-unit
+make test-integration
+
+# Format and lint
+make format
+make lint
+
+# Run in Docker
+make build
+make run
 ```
 
-2. **Run the backend**
-
-```bash
-uvicorn main:app --reload
-```
-
-3. **Access the application**
-
-Open your browser and go to:
-```
-http://localhost:8000
-```
-
-## Production Deployment
-
-For production deployment, consider these additional steps:
-
-1. **Use a production-ready server**
-   - Replace the default Uvicorn server with Gunicorn + Uvicorn workers
-
-2. **Set up a reverse proxy**
-   - Use Nginx or Traefik in front of the application
-
-3. **Configure SSL**
-   - Set up SSL certificates (Let's Encrypt)
-
-4. **Set proper security headers**
-   - Content Security Policy
-   - X-Frame-Options
-   - X-Content-Type-Options
-
-5. **Regular backups**
-   - Set up automated backups of the WebToys database
+See [CLAUDE.md](CLAUDE.md) for a complete list of development commands.
 
 ## Project Structure
 
 ```
 webtoys/
-├── backend/
-│   ├── main.py                    # FastAPI application entry point
-│   ├── requirements.txt           # Python dependencies
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── ai_service.py          # Claude API integration
-│   │   ├── validator.py           # Code validation and sanitization
-│   │   └── storage.py             # Storage service
-│   └── static/                    # Frontend static files
-│       ├── index.html             # Main page
-│       ├── styles.css             # CSS styles
-│       ├── app.js                 # Frontend logic
-│       └── sandbox.js             # WebToy sandbox implementation
-├── docker-compose.yml             # For local development
-└── README.md                      # Project documentation
+├── backend/              # FastAPI application
+│   ├── main.py           # Application entry point
+│   ├── services/         # Core services
+│   │   ├── ai_service.py # Claude API integration
+│   │   ├── validator.py  # Code validation
+│   │   └── storage.py    # Storage service
+│   ├── static/           # Frontend files
+│   └── tests/            # Test suite
+├── .github/              # CI/CD workflows
+├── docker-compose.yml    # Docker configuration
+├── Makefile              # Development workflow
+└── CLAUDE.md             # Developer guide
 ```
+
+## Production Deployment
+
+For production deployment, the project includes CI/CD workflows:
+
+1. **CI Pipeline** automatically runs on pull requests and commits to main:
+   - Linting with ruff
+   - Type checking with mypy
+   - Unit and integration tests
+   - Code coverage reporting
+
+2. **CD Pipeline** deploys to environments:
+   - Automatic deployment to development on merge to main
+   - Manual triggered deployment to production via GitHub Actions
+   - Uses Docker Hub for container registry
 
 ## Security Considerations
 
@@ -134,17 +142,18 @@ Contributions are welcome! Here's how you can contribute:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Commit your changes (`git commit -m 'Add some amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
+3. Make your changes following our [development workflow](CLAUDE.md)
+4. Run tests and linting (`make dev-loop`)
+5. Commit your changes (`git commit -m 'Add some amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+## License
+
+[MIT License](LICENSE)
 
 ## Acknowledgments
 
 - Anthropic's Claude API for AI-powered code generation
 - The FastAPI framework
 - All the creative people who inspire web experiments
-
-## Contact
-
-If you have any questions or feedback, please open an issue on GitHub.
