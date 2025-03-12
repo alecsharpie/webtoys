@@ -12,7 +12,7 @@ make setup
 
 # Set up development environment with uv
 make setup-dev
-source .venv/bin/activate
+# No need to activate virtual environment with uv
 ```
 
 ### Build & Run Commands
@@ -22,8 +22,10 @@ source .venv/bin/activate
 make run-dev
 
 # Build and run with Docker
-make build
-make run
+make build        # Clean build (no cache)
+make build-cached # Faster build with cache
+make run          # Run application
+make run-rebuild  # Rebuild and run with fresh images
 
 # Run in detached mode
 make run-detached
@@ -35,8 +37,8 @@ make stop
 ### Development Loop
 
 ```bash
-# Run the fast development loop (format, lint, test-unit)
-make dev-loop
+# Run the fast development loop (format, lint, test)
+make ci
 
 # Individual commands
 make format  # Format code with ruff
@@ -73,18 +75,25 @@ make lint
 # Fix auto-fixable linting errors
 make lint-fix
 
-# Run CI pipeline checks
+# Run CI pipeline checks (same as development loop)
 make ci
 ```
 
 ### Deployment
 
 ```bash
+# Build optimized Docker image for deployment with date-tagged version
+make build-prod
+
 # Deploy to development environment
 make deploy-dev
 
 # Deploy to production environment
 make deploy-prod
+
+# Clean up Docker resources when done
+make clean-docker
+make clean-all    # Full cleanup (code and Docker)
 ```
 
 ## Code Style Guidelines

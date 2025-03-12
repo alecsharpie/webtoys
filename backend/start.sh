@@ -6,5 +6,5 @@ if [ -z "$CLAUDE_API_KEY" ]; then
   exit 1
 fi
 
-# Start the application
-exec uvicorn main:app --host 0.0.0.0 --port 8000 
+# Start the application with uv
+exec uv run uvicorn main:app --host 0.0.0.0 --port 8000

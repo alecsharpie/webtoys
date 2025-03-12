@@ -1,7 +1,22 @@
-FROM python:3.12-slim
+# Use the official Python image with uv pre-installed
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+# Set working directory
+WORKDIR /app
+
+# Copy only dependency definition files
+COPY pyproject.toml /app/
+
+# Create an empty README.md file to satisfy the build requirements
+RUN touch README.md
+
+# Install dependencies in a separate stage for better caching
+# Set UV_NO_EDITABLE=1 to prevent editable installs
+ENV UV_NO_EDITABLE=1
+RUN uv sync --compile-bytecode
+
+# Production image
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 # Install curl for healthcheck
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
@@ -9,14 +24,14 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 # Set working directory
 WORKDIR /app
 
-# Copy pyproject.toml and other files needed for dependency resolution
-COPY pyproject.toml .
+# Copy installed packages from the builder stage
+COPY --from=builder /app/.venv /app/.venv
 
-# Install dependencies using uv
-RUN uv pip install --system --no-cache-dir .
+# Set path to include the virtual environment binaries
+ENV PATH="/app/.venv/bin:$PATH"
 
-# Copy application code
-COPY . .
+# Copy application code from backend directory
+COPY backend/ /app/
 
 # Create storage directory
 RUN mkdir -p /app/storage/previews /app/storage/webtoys
@@ -31,10 +46,7 @@ fi
 curl -f http://localhost:8000/health
 EOF
 
-RUN chmod +x /app/healthcheck.sh
-
-COPY start.sh /app/
-RUN chmod +x /app/start.sh
+RUN chmod +x /app/healthcheck.sh /app/start.sh
 
 # Expose the port
 EXPOSE 8000
