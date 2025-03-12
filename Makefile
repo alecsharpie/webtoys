@@ -101,7 +101,7 @@ dev-loop: lint format test-unit ## Fast development loop - format, lint, test
 lint: ## Lint code with uv (ruff, mypy)
 	@echo "${COLOR_BLUE}Linting code...${COLOR_RESET}"
 	@. .venv/bin/activate && cd backend && uv run ruff check .
-	@. .venv/bin/activate && cd backend && uv run mypy .
+	@. .venv/bin/activate && uv run mypy backend
 	@echo "${COLOR_GREEN}Linting complete!${COLOR_RESET}"
 
 # Fix linting errors automatically
@@ -122,7 +122,7 @@ ci: ## Run CI checks (format, lint, test)
 	@uv pip install -e .
 	@uv pip install --group dev --group lint
 	@cd backend && uv run ruff check .
-	@cd backend && uv run mypy .
+	@uv run mypy backend
 	@cd backend && uv run python -m pytest --cov=. --cov-report=xml
 	@echo "${COLOR_GREEN}CI pipeline complete!${COLOR_RESET}"
 

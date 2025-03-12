@@ -87,12 +87,14 @@ class AIService:
 
             # Parse response
             content_block = response.content[0]
-            
+
             # Handle different block types
             if isinstance(content_block, TextBlock):
                 return self._parse_response(content_block.text)
             else:
-                raise ValueError(f"Unexpected content block type: {type(content_block)}")
+                raise ValueError(
+                    f"Unexpected content block type: {type(content_block)}"
+                )
 
         except Exception as e:
             logger.error(f"Claude API error: {e!s}")
@@ -114,9 +116,9 @@ class AIService:
         {description}
         
         PARAMETERS:
-        - Canvas Size: {parameters['width']}x{parameters['height']}px
-        - Complexity Level: {parameters['complexity']}
-        - Visual Style: {parameters['style']}
+        - Canvas Size: {parameters["width"]}x{parameters["height"]}px
+        - Complexity Level: {parameters["complexity"]}
+        - Visual Style: {parameters["style"]}
         
         REQUIREMENTS:
         1. The code must be entirely self-contained (HTML, CSS, and JavaScript)

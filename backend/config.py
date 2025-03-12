@@ -27,6 +27,7 @@ class Settings(BaseSettings):
         api_key = read_secret("claude_api_key") or os.environ.get("CLAUDE_API_KEY", "")
         if api_key is not None:
             self.claude_api_key = api_key
+
     claude_model: str = os.environ.get("CLAUDE_MODEL", "claude-3-opus-20240229")
 
     # Storage
@@ -49,8 +50,8 @@ class Settings(BaseSettings):
     # Security
     cors_origins: list = os.environ.get("CORS_ORIGINS", "*").split(",")
 
-    class Config:
-        env_file = ".env"
+    # Using modern Pydantic V2 config
+    model_config = {"env_file": ".env"}
 
 
 settings = Settings()

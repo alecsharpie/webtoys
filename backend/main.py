@@ -152,7 +152,9 @@ async def generate_webtoy(
 
 
 @app.post("/api/publish", response_model=PublishResponse)
-async def publish_webtoy(request: PublishRequest, _: None = Depends(check_rate_limit)) -> PublishResponse:
+async def publish_webtoy(
+    request: PublishRequest, _: None = Depends(check_rate_limit)
+) -> PublishResponse:
     """
     Publish a previously generated WebToy
     """
@@ -275,7 +277,7 @@ def render_webtoy(code: dict[str, str], options: dict[str, Any]) -> str:
         
         <!-- Meta information -->
         <meta name="description" content="{description}">
-        {('<meta name="robots" content="noindex">' if options.get('is_preview') else '')}
+        {('<meta name="robots" content="noindex">' if options.get("is_preview") else "")}
         
         <!-- Content Security Policy -->
         <meta http-equiv="Content-Security-Policy" content="
@@ -357,7 +359,7 @@ def render_webtoy(code: dict[str, str], options: dict[str, Any]) -> str:
                 <span class="platform">WebToys</span>
             </div>
             <div class="attribution-actions">
-                {('<a href="/remix/' + options.get('webtoy_id', '') + '">Remix this</a>' if not options.get('is_preview') else '')}
+                {('<a href="/remix/' + options.get("webtoy_id", "") + '">Remix this</a>' if not options.get("is_preview") else "")}
                 <button onclick="shareWebToy()">Share</button>
             </div>
         </div>
@@ -420,10 +422,6 @@ def render_webtoy(code: dict[str, str], options: dict[str, Any]) -> str:
     """
 
 
-# Serve static files (frontend)
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
-
-
 # Health check endpoint
 @app.get("/health")
 async def health_check() -> dict[str, Any]:
@@ -431,6 +429,10 @@ async def health_check() -> dict[str, Any]:
     Health check endpoint for monitoring
     """
     return {"status": "healthy", "timestamp": time.time()}
+
+
+# Serve static files (frontend)
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 
 # Run application
