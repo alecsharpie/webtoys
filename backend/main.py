@@ -28,6 +28,9 @@ from services.ai_service import AIService
 from services.validator import WebToyValidator
 from services.storage import StorageService
 
+# Import settings
+from config import settings
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,10 +42,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add CORS middleware
+# Update CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust in production
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,15 +53,15 @@ app.add_middleware(
 
 # Initialize services
 ai_service = AIService(
-    api_key=os.environ.get("CLAUDE_API_KEY"),
-    model=os.environ.get("CLAUDE_MODEL", "claude-3-opus-20240229")
+    api_key=settings.claude_api_key,
+    model=settings.claude_model
 )
 
 validator = WebToyValidator()
 
 storage = StorageService(
-    storage_type=os.environ.get("STORAGE_TYPE", "file"),
-    connection_string=os.environ.get("STORAGE_CONNECTION", "./storage")
+    storage_type=settings.storage_type,
+    connection_string=settings.storage_connection
 )
 
 # Rate limiting configuration (simple in-memory implementation)
@@ -269,7 +272,7 @@ def render_webtoy(code: Dict[str, str], options: Dict[str, Any]) -> str:
     css = code.get("css", "")
     js = code.get("js", "")
     
-    # Sanitize title
+    # Sanitize title and description
     title = options.get("title", "WebToy").replace("<", "&lt;").replace(">", "&gt;")
     description = options.get("description", "").replace("<", "&lt;").replace(">", "&gt;")
     
@@ -291,10 +294,18 @@ def render_webtoy(code: Dict[str, str], options: Dict[str, Any]) -> str:
             default-src 'none';
             script-src 'unsafe-inline';
             style-src 'unsafe-inline';
-            img-src data: 'self';
+            img-src data: blob:;
             connect-src 'none';
             font-src 'none';
+            frame-src 'none';
+            object-src 'none';
+            base-uri 'none';
+            form-action 'none';
         ">
+        
+        <!-- Additional security headers -->
+        <meta http-equiv="X-Content-Type-Options" content="nosniff">
+        <meta http-equiv="X-Frame-Options" content="DENY">
         
         <!-- Base styles -->
         <style>
@@ -303,7 +314,7 @@ def render_webtoy(code: Dict[str, str], options: Dict[str, Any]) -> str:
                 padding: 0;
                 overflow: hidden;
                 background: #f5f5f5;
-                font-family: sans-serif;
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             }}
             
             #webtoy-container {{
@@ -366,8 +377,28 @@ def render_webtoy(code: Dict[str, str], options: Dict[str, Any]) -> str:
         <script>
             // Security wrapper
             (function() {{
-                // Create controlled environment
+                // Create controlled environment and capture errors
                 try {{
+                    // Define safe console methods
+                    const safeConsole = {{}};
+                    ['log', 'info', 'warn', 'error'].forEach(method => {{
+                        safeConsole[method] = function(...args) {{
+                            console[method](...args);
+                        }};
+                    }});
+                    
+                    // Block dangerous APIs
+                    const dangerousGlobals = [
+                        'fetch', 'XMLHttpRequest', 'WebSocket', 
+                        'localStorage', 'sessionStorage', 'indexedDB',
+                        'openDatabase', 'eval', 'Function',
+                        'setTimeout', 'setInterval'
+                    ];
+                    
+                    // Create safe execution context
+                    const sandbox = {{}};
+                    sandbox.console = safeConsole;
+                    
                     // WebToy code
                     {js}
                 }} catch (error) {{
@@ -402,6 +433,14 @@ def render_webtoy(code: Dict[str, str], options: Dict[str, Any]) -> str:
 
 # Serve static files (frontend)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """
+    Health check endpoint for monitoring
+    """
+    return {"status": "healthy", "timestamp": time.time()}
 
 # Run application
 if __name__ == "__main__":

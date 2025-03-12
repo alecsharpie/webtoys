@@ -53,6 +53,11 @@ class WebToyValidator:
         total_size = sum(len(content) for content in sanitized_code.values())
         if total_size > 500000:  # 500KB limit
             issues.append(f"Code exceeds maximum size limit (500KB): {total_size/1000}KB")
+            return ValidationResult(
+                is_valid=False,
+                issues=["Code exceeds maximum size limit"],
+                sanitized_code=sanitized_code
+            )
         
         # Validate HTML
         html_issues, sanitized_html = self._validate_html(sanitized_code["html"])
@@ -73,13 +78,27 @@ class WebToyValidator:
         resource_issues = self._check_external_resources(sanitized_code)
         issues.extend(resource_issues)
         
-        # For now, we'll allow the code to pass validation even with issues
-        # Just log the issues for monitoring purposes
+        # Block execution if critical security issues found
+        critical_issues = [
+            issue for issue in issues 
+            if any(keyword in issue.lower() for keyword in [
+                'remote code execution', 'xss', 'injection', 'iframe', 'object', 'embed'
+            ])
+        ]
+        
+        if critical_issues:
+            logger.warning(f"WebToy validation found critical issues: {critical_issues}")
+            return ValidationResult(
+                is_valid=False,
+                issues=critical_issues,
+                sanitized_code=sanitized_code
+            )
+        
         if issues:
-            logger.warning(f"WebToy validation found {len(issues)} issues: {issues}")
+            logger.warning(f"WebToy validation found {len(issues)} non-critical issues: {issues}")
         
         return ValidationResult(
-            is_valid=True,  # Always return true for now to avoid blocking generation
+            is_valid=True,
             issues=issues,
             sanitized_code=sanitized_code
         )

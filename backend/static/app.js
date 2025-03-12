@@ -80,42 +80,56 @@ const state = {
     generateButton.disabled = true;
     
     try {
-      // Call the API
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          description: state.description
-        })
-      });
-      
-      // Handle API response
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to generate WebToy');
-      }
-      
-      const data = await response.json();
-      
-      // Update state with results
-      state.previewId = data.preview_id;
-      state.webToyCode = data.code;
-      
-      // Show preview
-      showPreview();
-      
+        // Call the API
+        const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                description: state.description,
+                parameters: {
+                    width: 500,
+                    height: 500,
+                    complexity: "medium",
+                    style: "modern"
+                }
+            })
+        });
+        
+        // Parse JSON even for error responses to get detailed error message
+        const data = await response.json();
+        
+        // Handle API response
+        if (!response.ok) {
+            // If we have detailed validation errors, show them
+            if (data.issues && Array.isArray(data.issues)) {
+                throw new Error(
+                    `Failed to generate WebToy: ${data.detail || ''}\n` +
+                    data.issues.map(issue => `• ${issue}`).join('\n')
+                );
+            } else {
+                throw new Error(data.detail || 'Failed to generate WebToy');
+            }
+        }
+        
+        // Update state with results
+        state.previewId = data.preview_id;
+        state.webToyCode = data.code;
+        
+        // Show preview
+        showPreview();
+        
     } catch (error) {
-      // Display error
-      state.errorMessage = error.message;
-      errorDisplay.textContent = state.errorMessage;
-      errorDisplay.style.display = 'block';
+        // Display error
+        state.errorMessage = error.message;
+        errorDisplay.innerHTML = state.errorMessage.replace(/\n/g, '<br>');
+        errorDisplay.style.display = 'block';
     } finally {
-      // Reset UI state
-      state.isGenerating = false;
-      loadingIndicator.style.display = 'none';
-      validateInput();
+        // Reset UI state
+        state.isGenerating = false;
+        loadingIndicator.style.display = 'none';
+        validateInput();
     }
   }
   
