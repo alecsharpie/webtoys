@@ -3,40 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebToys - Interactive Canvas Experiments</title>
+    <title>WebToys Lab - Interactive Canvas Experiments</title>
     <link rel="stylesheet" href="/styles.css">
-    <meta name="description" content="Create and share interactive canvas experiments with WebToys">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <meta name="description" content="Create and share interactive canvas experiments in the WebToys Laboratory">
 </head>
 <body>
     <header>
         <div class="container">
             <h1>WebToys</h1>
-            <p class="tagline">Create interactive canvas experiments with AI</p>
+            <p class="tagline">The interactive canvas experiment laboratory</p>
         </div>
     </header>
 
     <main class="container">
         <!-- Create Section -->
         <section id="create-section" class="card">
-            <h2>Create a WebToy</h2>
-            <p>Describe what you want to create, and AI will generate the code for you.</p>
+            <h2>Create New Experiment</h2>
+            <div class="terminal-header">LABORATORY CONSOLE v1.0.2</div>
+            <p>Describe your visual experiment and the AI will synthesize the code.</p>
             
             <div class="input-group">
-                <label for="description-input">Describe your WebToy:</label>
+                <label for="description-input">EXPERIMENT PARAMETERS:</label>
                 <textarea 
                     id="description-input" 
-                    placeholder="e.g., A bouncing ball that changes color when clicked and leaves a trail as it moves"
+                    placeholder="e.g., A particle system that emits glowing particles from the cursor position, with particles that change color based on velocity and fade out over time..."
                     rows="4"
                 ></textarea>
             </div>
             
             <div class="button-group">
-                <button id="generate-button" class="primary-button" disabled>Generate WebToy</button>
+                <button id="generate-button" class="primary-button" disabled>Initialize Experiment</button>
             </div>
             
             <div id="loading-indicator" class="loading">
-                <div class="spinner"></div>
-                <p>Creating your WebToy...</p>
+                <div class="loading-header">
+                    <h3>Experiment Generation in Progress</h3>
+                </div>
+                <div class="spinner-container">
+                    <div class="spinner"></div>
+                    <p>AI Model Processing...</p>
+                </div>
+                <div class="progress-container">
+                    <div id="progress-bar" class="progress-bar"></div>
+                </div>
+                <div class="progress-text" id="progress-text">Initializing experiment...</div>
+                <div class="progress-status" id="progress-status">
+                    <p class="status-line">$ initializing_laboratory...</p>
+                    <p class="status-line">$ connecting_to_ai_model...</p>
+                    <p class="status-line blink">$ _</p>
+                </div>
             </div>
             
             <div id="error-display" class="error-message"></div>
@@ -53,22 +71,24 @@
         
         <!-- Preview Section -->
         <section id="preview-section" class="card">
-            <h2>Your WebToy Preview</h2>
+            <h2>Experiment Results</h2>
+            <div class="terminal-header">VISUALIZATION MODULE</div>
             
             <div class="iframe-container">
                 <iframe id="preview-frame" sandbox="allow-scripts" class="webtoy-preview"></iframe>
             </div>
             
             <div class="button-group">
-                <button id="regenerate-button" class="secondary-button">Try Again</button>
-                <button id="publish-button" class="primary-button">Publish & Share</button>
+                <button id="regenerate-button" class="secondary-button">Reset Parameters</button>
+                <button id="publish-button" class="primary-button">Publish Experiment</button>
             </div>
         </section>
         
         <!-- Share Section -->
         <section id="share-section" class="card">
-            <h2>WebToy Published!</h2>
-            <p>Your WebToy is now live and ready to share:</p>
+            <h2>Experiment Published</h2>
+            <div class="terminal-header">PUBLIC ACCESS ENABLED</div>
+            <p>Your experiment is now live in the public database:</p>
             
             <div class="share-link-container">
                 <a id="share-link" class="share-link" href="#" target="_blank"></a>
@@ -79,15 +99,15 @@
             </div>
             
             <div class="button-group">
-                <a id="view-webtoy-button" class="primary-button" href="#" target="_blank">View WebToy</a>
-                <a href="/" class="secondary-button">Create Another</a>
+                <a id="view-webtoy-button" class="primary-button" href="#" target="_blank">View Experiment</a>
+                <a href="/" class="secondary-button">Begin New Experiment</a>
             </div>
         </section>
     </main>
     
     <footer>
         <div class="container">
-            <p>&copy; 2025 WebToys - Create and share interactive canvas experiments</p>
+            <p>&copy; 2025 WebToys Laboratory - Where digital experiments come to life</p>
         </div>
     </footer>
     

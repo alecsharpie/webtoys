@@ -112,7 +112,7 @@ test-coverage: ## Generate test coverage report
 lint: ## Lint code with uv (ruff, mypy)
 	@echo "${COLOR_BLUE}Linting code...${COLOR_RESET}"
 	@cd backend && uv run ruff check .
-	@cd backend && uv run mypy backend
+	@cd backend && uv run mypy . --exclude 'tests/'
 	@echo "${COLOR_GREEN}Linting complete!${COLOR_RESET}"
 
 # Fix linting errors automatically
