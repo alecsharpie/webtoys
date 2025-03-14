@@ -168,13 +168,6 @@ clean: ## Clean pycache, coverage reports and other temporary files
 	@rm -rf .coverage htmlcov .pytest_cache .mypy_cache .ruff_cache
 	@echo "${COLOR_GREEN}Clean complete!${COLOR_RESET}"
 
-# Clean Docker resources
-clean-docker: ## Clean Docker resources (containers, images, volumes)
-	@echo "${COLOR_BLUE}Cleaning Docker resources...${COLOR_RESET}"
-	@docker-compose down --volumes --remove-orphans
-	@docker image prune -f
-	@echo "${COLOR_GREEN}Docker clean complete!${COLOR_RESET}"
-
 # Full cleanup - code and Docker
 clean-all: clean clean-docker ## Full cleanup of code and Docker resources
 	@echo "${COLOR_GREEN}All clean complete!${COLOR_RESET}"
